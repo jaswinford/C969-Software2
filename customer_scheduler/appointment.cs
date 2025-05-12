@@ -1,19 +1,18 @@
 namespace customer_scheduler
 {
     /// <summary>
-    /// Customer object and logic to interact with DB for customer records
+    /// Appointment object and logic to interact with DB for appointment records
     /// </summary>
     ///
     /// TODO: Add member variables
     /// TODO: 'Add' Function
     /// TODO: 'Update' Function
     /// TODO: 'Delete' Function
-    /// TODO: 'Validate' Function
-    public partial class Customer : DBObject
+
+    public partial class Appointment : DBObject
     {
-        public Customer()
+        public Appointment()
         {
 
-        }
     }
 }
