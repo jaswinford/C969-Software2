@@ -10,9 +10,12 @@ namespace customer_scheduler
         /// <summary>
         /// Constructor for the Country class
         /// </summary>
+
+        public string Name { get; set; } // country VARCHAR(50)
+
         public Country()
         {
-
+            Name = string.Empty;
         }
     }
     {

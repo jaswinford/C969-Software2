@@ -9,9 +9,17 @@ namespace customer_scheduler
     {
         public int Id { get; }
         public DateTime CreatedAt { get; }
-        public DateTime CreatedBy { get; }
+        public User CreatedBy { get; }
         public DateTime UpdatedAt { get; }
-        public DateTime UpdatedBy { get; }
+        public User UpdatedBy { get; }
 
+        public  DBObject()
+        {
+            Id = null;
+            CreatedAt = null;
+            CreatedBy = null;
+            UpdatedAt = null;
+            UpdatedBy = null;
+        }
     }
 }

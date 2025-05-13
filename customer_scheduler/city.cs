@@ -7,9 +7,14 @@ namespace customer_scheduler
     /// </remarks>
     public partial class City : DBObject
     {
+
+        public string Name { get; set; }
+        public Country Country { get; set; }
+
         public City()
         {
-
+            Name = string.Empty;
+            Country = new Country();
         }
     }
 }

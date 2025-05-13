@@ -11,6 +11,10 @@ namespace customer_scheduler
     /// TODO: 'Validate' Function
     public partial class Customer : DBObject
     {
+        public string Name { get; set; } // customerName VARCHAR(45)
+        public Address Address { get; set; } // addressId INT(10)
+        public bool Active { get; set; } // active TINYINT(1)
+
         public Customer()
         {
 
