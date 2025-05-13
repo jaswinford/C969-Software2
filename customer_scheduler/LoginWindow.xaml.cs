@@ -14,7 +14,7 @@ namespace customer_scheduler
     /// <summary>
     /// Interaction logic for LoginWindow.xaml
     /// </summary>
-    /// 
+    ///
     /// TODO: Determin users' location
     /// TODO: Translate login and error control messages into English and one additional language
     /// TODO: Verify credentials.
@@ -23,7 +23,28 @@ namespace customer_scheduler
         public LoginWindow()
         {
             InitializeComponent();
-            // TODO : Get user's location on window initialization
+
+        }
+
+        /// <summary>
+        /// Gets the user's current country using Geolocator.
+        /// </summary>
+        /// <returns>The user's country.</returns>
+        private async string GetUserLocation()
+        {
+            var accessStatus = await Geolocator.RequestAccessAsync();
+            switch (accessStatus)
+            {
+                case GeolocationAccessStatus.Allowed:
+                    Geolocator geolocator = new Geolocator { DesiredAccuracyInMeters = 100 };
+                    Geoposition pos = await geolocator.GetGeopositionAsync();
+                    return pos.CivicAddress.Country;
+                    break;
+                case GeolocationAccessStatus.Denied:
+                    break;
+                case GeolocationAccessStatus.Unspecified:
+                    break;
+            }
         }
     }
 }
