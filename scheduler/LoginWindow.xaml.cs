@@ -26,25 +26,5 @@ namespace customer_scheduler
 
         }
 
-        /// <summary>
-        /// Gets the user's current country using Geolocator.
-        /// </summary>
-        /// <returns>The user's country.</returns>
-        private async string GetUserLocation()
-        {
-            var accessStatus = await Geolocator.RequestAccessAsync();
-            switch (accessStatus)
-            {
-                case GeolocationAccessStatus.Allowed:
-                    Geolocator geolocator = new Geolocator { DesiredAccuracyInMeters = 100 };
-                    Geoposition pos = await geolocator.GetGeopositionAsync();
-                    return pos.CivicAddress.Country;
-                    break;
-                case GeolocationAccessStatus.Denied:
-                    break;
-                case GeolocationAccessStatus.Unspecified:
-                    break;
-            }
-        }
     }
 }
