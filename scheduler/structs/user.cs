@@ -11,7 +11,8 @@ namespace customer_scheduler
         public bool IsActive { get; set; } // active TINYINT
         // We don't store the users password, if at all possible.
 
-        public User()  {
+        public User()
+        {
             Name = string.Empty;
             IsActive = true;
         }

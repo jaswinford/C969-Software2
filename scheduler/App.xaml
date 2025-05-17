@@ -1,7 +1,7 @@
-﻿<Application x:Class="customer_scheduler.App"
+﻿<Application x:Class="scheduler.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:customer_scheduler"
+             xmlns:local="clr-namespace:scheduler"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          
