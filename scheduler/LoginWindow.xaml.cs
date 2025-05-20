@@ -65,7 +65,6 @@ namespace scheduler
 
             if (ValidateLogin(username, password))
             {
-                DialogResult = true;
                 Close();
             }
             else
