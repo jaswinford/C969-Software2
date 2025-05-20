@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using scheduler.structs;
 
 namespace scheduler
 {
@@ -90,8 +91,8 @@ namespace scheduler
 
         private bool ValidateLogin(string username, string password)
         {
-            // TODO: Login validation
-            return false;
+            var user = new User { Name = UsernameTextBox.Text };
+            return user.Authenticated(PasswordTextBox.Password);
         }
     }
 }
