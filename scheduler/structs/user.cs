@@ -23,7 +23,7 @@ namespace scheduler.structs
             try
             {
                 DatabaseManager.Instance.Connect();
-                using (var cmd = new MySqlCommand("SELECT password FROM user WHERE userName == '" + Name + "'",
+                using (var cmd = new MySqlCommand("SELECT password FROM user WHERE userName = '" + Name + "'",
                            DatabaseManager.Instance.Connection))
                 {
                     using (var reader = cmd.ExecuteReader())
