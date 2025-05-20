@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Configuration;
 using System.Data;
+using System.Threading;
 using MySql.Data.MySqlClient;
 
 namespace scheduler.database
 {
     public class DatabaseManager
     {
+        private const int CONNECTION_TIMEOUT_SECONDS = 30;
         private static DatabaseManager _instance;
+        private static readonly object _lock = new object();
         private readonly string _connectionString;
         private MySqlConnection _connection;
 
@@ -20,9 +23,10 @@ namespace scheduler.database
         {
             get
             {
-                if (_instance == null) _instance = new DatabaseManager();
-
-                return _instance;
+                lock (_lock)
+                {
+                    return _instance ??= new DatabaseManager();
+                }
             }
         }
 
@@ -40,7 +44,20 @@ namespace scheduler.database
         {
             try
             {
-                if (_connection != null && _connection.State != ConnectionState.Open) _connection.Open();
+                if (_connection?.State == ConnectionState.Open) return; // Already connected
+
+                Connection.Open();
+
+                // Wait until connection is fully established or timeout occurs
+                var timeoutTime = DateTime.Now.AddSeconds(CONNECTION_TIMEOUT_SECONDS);
+                while (!IsConnectionValid())
+                {
+                    if (DateTime.Now > timeoutTime)
+                        throw new TimeoutException(
+                            $"Database connection could not be established within {CONNECTION_TIMEOUT_SECONDS} seconds");
+
+                    Thread.Sleep(100); // Wait 100ms before checking again
+                }
             }
             catch (MySqlException ex)
             {
@@ -48,11 +65,27 @@ namespace scheduler.database
             }
         }
 
+        private bool IsConnectionValid()
+        {
+            try
+            {
+                using (var cmd = new MySqlCommand("SELECT 1", Connection))
+                {
+                    cmd.ExecuteScalar();
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public void Disconnect()
         {
             try
             {
-                if (_connection != null && _connection.State != ConnectionState.Closed) _connection.Close();
+                if (_connection?.State == ConnectionState.Open) _connection.Close();
             }
             catch (MySqlException ex)
             {
