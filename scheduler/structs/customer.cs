@@ -1,4 +1,4 @@
-namespace customer_scheduler
+namespace scheduler.structs
 {
     /// <summary>
     /// Customer object and logic to interact with DB for customer records
@@ -14,10 +14,5 @@ namespace customer_scheduler
         public string Name { get; set; } // customerName VARCHAR(45)
         public Address Address { get; set; } // addressId INT(10)
         public bool Active { get; set; } // active TINYINT(1)
-
-        public Customer()
-        {
-
-        }
     }
 }

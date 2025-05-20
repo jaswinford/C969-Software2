@@ -1,25 +1,16 @@
-namespace customer_scheduler
+using System;
+
+namespace scheduler.structs
 {
     /// <summary>
     /// DBObject object and logic to interact with DB for DBObject records
     /// </summary>
-    /// <remarks>
-    /// </remarks>
     public class DBObject
     {
-        public int Id { get; }
+        public int Id { get; } = -1;
         public DateTime CreatedAt { get; }
-        public User CreatedBy { get; }
+        public User CreatedBy { get; } = null;
         public DateTime UpdatedAt { get; }
-        public User UpdatedBy { get; }
-
-        public  DBObject()
-        {
-            Id = null;
-            CreatedAt = null;
-            CreatedBy = null;
-            UpdatedAt = null;
-            UpdatedBy = null;
-        }
+        public User UpdatedBy { get; } = null;
     }
 }

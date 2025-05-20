@@ -1,4 +1,4 @@
-namespace customer_scheduler
+namespace scheduler.structs
 {
     /// <summary>
     /// City object and logic to interact with DB for city records
@@ -7,14 +7,7 @@ namespace customer_scheduler
     /// </remarks>
     public partial class City : DBObject
     {
-
-        public string Name { get; set; }
-        public Country Country { get; set; }
-
-        public City()
-        {
-            Name = string.Empty;
-            Country = new Country();
-        }
+        public string Name { get; set; } = string.Empty;
+        public Country Country { get; set; } = new Country();
     }
 }
