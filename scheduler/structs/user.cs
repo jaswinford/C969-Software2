@@ -13,7 +13,35 @@ namespace scheduler.structs
     {
         public string Name { get; set; } = string.Empty; // userName VARCHAR(50)
 
-        public bool IsActive { get; set; } = true; // active TINYINT
+        public bool IsActive
+        {
+            get
+            {
+                try
+                {
+                    DatabaseManager.Instance.Connect();
+                    using (var cmd = new MySqlCommand("SELECT active FROM user WHERE userName = '" + Name + "'",
+                               DatabaseManager.Instance.Connection))
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read()) return reader.GetBoolean(0);
+                        }
+                    }
+                }
+                catch (MySqlException)
+                {
+                    LanguageManager.Instance.ShowMessageBox("Message.SQLError", "Title.SQLError", MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                finally
+                {
+                    DatabaseManager.Instance.Disconnect();
+                }
+
+                return false;
+            }
+        }
         // We don't store the user password, if at all possible.
 
         public bool Authenticated(string password)
@@ -32,7 +60,7 @@ namespace scheduler.structs
                     }
                 }
             }
-            catch (MySqlException ex)
+            catch (MySqlException)
             {
                 LanguageManager.Instance.ShowMessageBox("Message.SQLError", "Title.SQLError", MessageBoxButton.OK,
                     MessageBoxImage.Error);
