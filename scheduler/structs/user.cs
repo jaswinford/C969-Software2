@@ -13,6 +13,16 @@ namespace scheduler.structs
     {
         public string Name { get; set; } = string.Empty; // userName VARCHAR(50)
 
+        /// <summary>
+        ///     Indicates whether the user is currently active in the system.
+        ///     This property retrieves the active status of the user by performing a database query
+        ///     using the user's name.
+        /// </summary>
+        /// <remarks>
+        ///     Returns true if the user is active and exists in the database; otherwise, false.
+        ///     If a database error occurs during the query, false is returned, and an error message
+        ///     is displayed to the user.
+        /// </remarks>
         public bool IsActive
         {
             get
@@ -42,8 +52,15 @@ namespace scheduler.structs
                 return false;
             }
         }
-        // We don't store the user password, if at all possible.
 
+        /// <summary>
+        ///     Authenticates the user by verifying the provided password against the stored password in the database.
+        /// </summary>
+        /// <param name="password">The password to authenticate the user with.</param>
+        /// <returns>
+        ///     Returns true if the provided password matches the stored password for the user and the user is active, otherwise
+        ///     returns false.
+        /// </returns>
         public bool Authenticated(string password)
         {
             if (!IsActive) return false;
