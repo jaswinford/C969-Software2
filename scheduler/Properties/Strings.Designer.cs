@@ -123,6 +123,15 @@ namespace scheduler.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to query SQL server..
+        /// </summary>
+        internal static string Message_SQLError {
+            get {
+                return ResourceManager.GetString("Message.SQLError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Confirm Exit.
         /// </summary>
         internal static string Title_ExitConfirm {
@@ -137,6 +146,15 @@ namespace scheduler.Properties {
         internal static string Title_LoginFailed {
             get {
                 return ResourceManager.GetString("Title.LoginFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SQL Error.
+        /// </summary>
+        internal static string Title_SQLError {
+            get {
+                return ResourceManager.GetString("Title.SQLError", resourceCulture);
             }
         }
         

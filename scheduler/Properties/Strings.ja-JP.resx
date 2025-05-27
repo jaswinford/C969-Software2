@@ -153,4 +153,10 @@
     <data name="TitleLogin" xml:space="preserve">
     <value>ログイン</value>
   </data>
+    <data name="Message.SQLError" xml:space="preserve">
+        <value>SQL Server のクエリに失敗しました。</value>
+    </data>
+    <data name="Title.SQLError" xml:space="preserve">
+        <value>SQLエラー</value>
+    </data>
 </root>

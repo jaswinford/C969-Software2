@@ -153,4 +153,10 @@
     <data name="TitleLogin" xml:space="preserve">
     <value>Login</value>
   </data>
+    <data name="Message.SQLError" xml:space="preserve">
+        <value>Failed to query SQL Server.</value>
+    </data>
+    <data name="Title.SQLError" xml:space="preserve">
+        <value>SQL Error</value>
+    </data>
 </root>
