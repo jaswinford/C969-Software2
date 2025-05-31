@@ -108,6 +108,12 @@
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
+      <Compile Include="AppointmentWindow.xaml.cs">
+          <DependentUpon>AppointmentWindow.xaml</DependentUpon>
+      </Compile>
+      <Compile Include="CustomerWindow.xaml.cs">
+          <DependentUpon>CustomerWindow.xaml</DependentUpon>
+      </Compile>
       <Compile Include="database\DatabaseManager.cs"/>
       <Compile Include="LanguageManager.cs"/>
       <Compile Include="Properties\Strings.Designer.cs">
@@ -122,6 +128,8 @@
       <Compile Include="structs\customer.cs"/>
       <Compile Include="structs\dbobject.cs"/>
       <Compile Include="structs\user.cs"/>
+      <Page Include="AppointmentWindow.xaml"/>
+      <Page Include="CustomerWindow.xaml"/>
     <Page Include="LoginWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
