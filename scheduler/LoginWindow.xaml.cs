@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using scheduler.structs;
 
 namespace scheduler
@@ -7,14 +8,14 @@ namespace scheduler
     /// <summary>
     /// Interaction logic for LoginWindow.xaml
     /// </summary>
-    public partial class LoginWindow : Window
+    public partial class LoginWindow
     {
         private readonly LanguageManager _languageManager = LanguageManager.Instance;
 
         /// <summary>
         ///     Represents the login window for user authentication.
         ///     Implements functionality to allow UI-culture language switching,
-        ///     dynamically updating translations for labels, buttons, and window title based on selected language.
+        ///     dynamically updating translations for labels, buttons, and window titles based on the selected language.
         /// </summary>
         public LoginWindow()
         {
@@ -83,13 +84,10 @@ namespace scheduler
         /// <param name="e">The event data associated with the click action.</param>
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            var username = UsernameTextBox.Text;
-            var password = PasswordTextBox.Password;
-
-            if (ValidateLogin(username, password))
+            if (ValidateLogin())
             {
-                Close();
                 new MainWindow().Show();
+                Close();
             }
             else
             {
@@ -103,7 +101,7 @@ namespace scheduler
 
         /// <summary>
         ///     Handles the click event of the Cancel button.
-        ///     Prompts the user with a confirmation dialog for exiting the application.
+        ///     Prompts the user with a confirmation dialog to exit the application.
         ///     If the user confirms, the application shuts down.
         /// </summary>
         /// <param name="sender">The source of the event, typically the Cancel button.</param>
@@ -123,13 +121,19 @@ namespace scheduler
         ///     Validates the user's login credentials by verifying the provided username and password.
         ///     Checks against stored user information to determine whether the user is authenticated.
         /// </summary>
-        /// <param name="username">The username entered by the user.</param>
-        /// <param name="password">The password entered by the user.</param>
         /// <returns>True if the credentials are valid and the user is authenticated; otherwise, false.</returns>
-        private bool ValidateLogin(string username, string password)
+        private bool ValidateLogin()
         {
             var user = new User { Name = UsernameTextBox.Text };
             return user.Authenticated(PasswordTextBox.Password);
+        }
+
+        private void PasswordTextBox_OnKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                LoginButton_Click(sender, e);
+            }
         }
     }
 }
