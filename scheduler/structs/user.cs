@@ -23,7 +23,7 @@ namespace scheduler.structs
         ///     If a database error occurs during the query, false is returned, and an error message
         ///     is displayed to the user.
         /// </remarks>
-        public bool IsActive
+        private bool IsActive
         {
             get
             {
@@ -39,7 +39,7 @@ namespace scheduler.structs
                         }
                     }
                 }
-                catch (MySqlException)
+                catch
                 {
                     LanguageManager.Instance.ShowMessageBox("Message.SQLError", "Title.SQLError", MessageBoxButton.OK,
                         MessageBoxImage.Error);

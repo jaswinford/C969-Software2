@@ -129,7 +129,9 @@ namespace scheduler
         private bool ValidateLogin(string username, string password)
         {
             var user = new User { Name = UsernameTextBox.Text };
-            return user.Authenticated(PasswordTextBox.Password);
+//            return user.Authenticated(PasswordTextBox.Password);
+//          Temporarily bypass login checks
+            return true;
         }
     }
 }
