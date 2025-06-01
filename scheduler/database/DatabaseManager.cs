@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.Threading;
+using System.Windows;
 using MySql.Data.MySqlClient;
 
 namespace scheduler.database
@@ -15,7 +18,7 @@ namespace scheduler.database
     /// </remarks>
     public class DatabaseManager
     {
-        private const int CONNECTION_TIMEOUT_SECONDS = 30;
+        private const int ConnectionTimeoutSeconds = 30;
         private static DatabaseManager _instance;
         private static readonly object _lock = new object();
         private readonly string _connectionString;
@@ -24,6 +27,78 @@ namespace scheduler.database
         private DatabaseManager()
         {
             _connectionString = ConfigurationManager.ConnectionStrings["MySQLConnection"].ConnectionString;
+        }
+
+        public void ExecuteNonQuery(string query)
+        {
+            ExecuteNonQuery(query, null);
+        }
+
+        public void ExecuteNonQuery(string query, params object[] parameters)
+        {
+            try
+            {
+                Connect();
+                using (var cmd = new MySqlCommand(query, Connection))
+                {
+                    if (parameters != null) cmd.Parameters.AddRange(parameters);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch
+            {
+                LanguageManager.Instance.ShowMessageBox("Message.SQLError", "Title.SQLError", MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                Disconnect();
+            }
+        }
+
+        public List<object[]> ExecuteQuery(string query)
+        {
+            return ExecuteQuery(query, null);
+        }
+
+        public List<object[]> ExecuteQuery(string query, params object[] parameters)
+        {
+            try
+            {
+                Instance.Connect();
+                using (var cmd = new MySqlCommand(query, Instance.Connection))
+                {
+                    if (parameters != null) cmd.Parameters.AddRange(parameters);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        var result = new List<object[]>();
+                        while (reader.Read())
+                        {
+                            var row = new object[reader.FieldCount];
+                            reader.GetValues(row);
+                            result.Add(row);
+                        }
+
+                        return result;
+                    }
+                }
+            }
+            catch (MySqlException)
+            {
+                LanguageManager.Instance.ShowMessageBox("Message.SQLError", "Title.SQLError", MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return null;
+            }
+            catch (Exception)
+            {
+                LanguageManager.Instance.ShowMessageBox("Message.UnspecifiedError", "Title.UnspecifiedError",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
+            }
+            finally
+            {
+                Disconnect();
+            }
         }
 
         public static DatabaseManager Instance
@@ -56,12 +131,12 @@ namespace scheduler.database
                 Connection.Open();
 
                 // Wait until connection is fully established or timeout occurs
-                var timeoutTime = DateTime.Now.AddSeconds(CONNECTION_TIMEOUT_SECONDS);
+                var timeoutTime = DateTime.Now.AddSeconds(ConnectionTimeoutSeconds);
                 while (!IsConnectionValid())
                 {
                     if (DateTime.Now > timeoutTime)
                         throw new TimeoutException(
-                            $"Database connection could not be established within {CONNECTION_TIMEOUT_SECONDS} seconds");
+                            $"Database connection could not be established within {ConnectionTimeoutSeconds} seconds");
 
                     Thread.Sleep(100); // Wait 100ms before checking again
                 }

@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using MySql.Data.MySqlClient;
 using scheduler.database;
@@ -29,27 +30,15 @@ namespace scheduler.structs
             {
                 try
                 {
-                    DatabaseManager.Instance.Connect();
-                    using (var cmd = new MySqlCommand("SELECT active FROM user WHERE userName = '" + Name + "'",
-                               DatabaseManager.Instance.Connection))
-                    {
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read()) return reader.GetBoolean(0);
-                        }
-                    }
+                    var result =
+                        DatabaseManager.Instance.ExecuteQuery("SELECT active FROM user WHERE userName = '" + Name + "'")
+                            [0][0];
+                    return Convert.ToSByte(result) == 1; // Convert to SByte to avoid overflows;
                 }
                 catch
                 {
-                    LanguageManager.Instance.ShowMessageBox("Message.SQLError", "Title.SQLError", MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                    return false;
                 }
-                finally
-                {
-                    DatabaseManager.Instance.Disconnect();
-                }
-
-                return false;
             }
         }
 
@@ -67,24 +56,16 @@ namespace scheduler.structs
 
             try
             {
-                DatabaseManager.Instance.Connect();
-                using (var cmd = new MySqlCommand("SELECT password FROM user WHERE userName = '" + Name + "'",
-                           DatabaseManager.Instance.Connection))
-                {
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        if (reader.Read()) return reader.GetString(0) == password;
-                    }
-                }
+                var result =
+                    DatabaseManager.Instance.ExecuteQuery("SELECT password FROM user WHERE userName = '" + Name + "'")
+                        [0][0];
+                var storedPassword = result.ToString();
+                return storedPassword == password; // Compare stored password with provided password;
             }
             catch (MySqlException)
             {
                 LanguageManager.Instance.ShowMessageBox("Message.SQLError", "Title.SQLError", MessageBoxButton.OK,
                     MessageBoxImage.Error);
-            }
-            finally
-            {
-                DatabaseManager.Instance.Disconnect();
             }
 
             return false;
