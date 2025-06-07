@@ -15,6 +15,8 @@ namespace scheduler.structs
         private string _phone;
         private string _postalCode;
 
+        public int Id { get; set; } = -1;
+
         public string Address1
         {
             get => _address1;
@@ -52,7 +54,7 @@ namespace scheduler.structs
         /// <returns>
         ///     Returns true if the address is valid according to the specified conditions; otherwise, false.
         /// </returns>
-        public bool IsValid
+        public override bool IsValid
         {
             get
             {
@@ -63,10 +65,12 @@ namespace scheduler.structs
             }
         }
 
-        public void Load(int id)
+        public override void Load()
         {
             var result =
-                DatabaseManager.Instance.ExecuteQuery("SELECT * FROM address WHERE id = ?", new object[] { id });
+                DatabaseManager.Instance.ExecuteQuery(
+                    "SELECT addressId, address, address2, cityId, postalCode, phone, createDate, createdBy,  FROM address WHERE id = ?",
+                    new object[] { Id });
             if (result.Count == 0) return; //Don't load if doesn't exist'
             var row = result[0];
             Id = Convert.ToInt32(row[0]);
@@ -75,9 +79,13 @@ namespace scheduler.structs
             City.Id = Convert.ToInt32(row[3]);
             PostalCode = row[4].ToString();
             Phone = row[5].ToString();
+            CreatedAt = DateTime.Parse(row[6].ToString());
+            CreatedBy = row[7].ToString();
+            UpdatedAt = DateTime.Parse(row[8].ToString());
+            UpdatedBy = row[9].ToString();
         }
 
-        public void Create()
+        public override void Create()
         {
             if (Id != -1) return; //Don't create if already exists'
             if (!IsValid) return; //Don't create if invalid'
@@ -94,9 +102,9 @@ namespace scheduler.structs
                 PostalCode,
                 Phone,
                 timestamp,
-                State.Instance.CurrentUser.Id,
+                State.Instance.CurrentUser.Name,
                 timestamp,
-                State.Instance.CurrentUser.Id,
+                State.Instance.CurrentUser.Name,
             };
             try
             {
@@ -108,7 +116,7 @@ namespace scheduler.structs
             }
         }
 
-        public void Update()
+        public override void Update()
         {
             if (Id == -1) return; //Don't update if doesn't exist'
             if (!IsValid) return; //Don't update if invalid'
@@ -125,7 +133,7 @@ namespace scheduler.structs
                 Phone,
                 Id,
                 timestamp,
-                State.Instance.CurrentUser.Id
+                State.Instance.CurrentUser.Name
             };
             try
             {
@@ -137,7 +145,7 @@ namespace scheduler.structs
             }
         }
 
-        public void Delete()
+        public override void Delete()
         {
             if (Id == -1) return; //Don't delete if doesn't exist'
             var query = "DELETE FROM address WHERE id = ?";

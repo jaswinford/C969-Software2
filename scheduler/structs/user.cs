@@ -13,33 +13,22 @@ namespace scheduler.structs
     public class User : DBObject
     {
         public string Name { get; set; } = string.Empty; // userName VARCHAR(50)
+        private bool IsActive { get; set; } = false;
 
-        /// <summary>
-        ///     Indicates whether the user is currently active in the system.
-        ///     This property retrieves the active status of the user by performing a database query
-        ///     using the user's name.
-        /// </summary>
-        /// <remarks>
-        ///     Returns true if the user is active and exists in the database; otherwise, false.
-        ///     If a database error occurs during the query, false is returned, and an error message
-        ///     is displayed to the user.
-        /// </remarks>
-        private bool IsActive
+        public User(string name)
         {
-            get
-            {
-                try
-                {
-                    var result =
-                        DatabaseManager.Instance.ExecuteQuery("SELECT active FROM user WHERE userName = '" + Name + "'")
-                            [0][0];
-                    return Convert.ToSByte(result) == 1; // Convert to SByte to avoid overflows;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
+            Name = name;
+            Load();
+        }
+
+        public User(int id)
+        {
+            Id = id;
+            var result =
+                DatabaseManager.Instance.ExecuteQuery("SELECT userName FROM user WHERE userId = ?",
+                    new object[] { Id })[0];
+            Name = result[0].ToString();
+            Load();
         }
 
         /// <summary>
@@ -52,6 +41,7 @@ namespace scheduler.structs
         /// </returns>
         public bool Authenticated(string password)
         {
+            Load(); // Always make sure we're up to date.
             if (!IsActive) return false;
 
             try
@@ -71,22 +61,16 @@ namespace scheduler.structs
             return false;
         }
 
-        public int Id
+        public override void Load()
         {
-            get
-            {
-                try
-                {
-                    var result =
-                        DatabaseManager.Instance.ExecuteQuery("SELECT id FROM user WHERE userName = '" + Name + "'")
-                            [0][0];
-                    return Convert.ToInt32(result); // Convert to Int32 to avoid overflows;
-                }
-                catch
-                {
-                    return -1;
-                }
-            }
+            var result =
+                DatabaseManager.Instance.ExecuteQuery("SELECT userId,userName,active FROM user WHERE userName = ?",
+                    new object[] { Name });
+            if (result.Count == 0) return; //Don't load if doesn't exist'
+            var row = result[0];
+            Id = Convert.ToInt32(row[0]);
+            Name = row[1].ToString();
+            IsActive = Convert.ToBoolean(row[2]);
         }
     }
 }

@@ -5,12 +5,36 @@ namespace scheduler.structs
     /// <summary>
     /// DBObject object and logic to interact with DB for DBObject records
     /// </summary>
-    public class DBObject
+    public abstract class DBObject
     {
-        public int Id { get; set; } = -1;
-        public DateTime CreatedAt { get; }
-        public User CreatedBy { get; } = null;
-        public DateTime UpdatedAt { get; }
-        public User UpdatedBy { get; } = null;
+        private int _id = -1;
+
+        public int Id
+        {
+            get => _id;
+            set
+            {
+                _id = value;
+                this.Load();
+            }
+        }
+
+        public DateTime CreatedAt { get; set; }
+        public string CreatedBy { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string UpdatedBy { get; set; }
+
+        public abstract void Load();
+        public abstract void Create();
+        public abstract void Update();
+        public abstract void Delete();
+        public abstract bool IsValid { get; }
+
+
+        public void Load(int id)
+        {
+            Id = id;
+            Load();
+        }
     }
 }
