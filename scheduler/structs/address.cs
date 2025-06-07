@@ -1,4 +1,6 @@
+using System;
 using System.Text.RegularExpressions;
+using System.Windows;
 using scheduler.database;
 
 namespace scheduler.structs
@@ -58,6 +60,95 @@ namespace scheduler.structs
                     _phone == string.Empty) return false; //verify address is provided
                 if (!Regex.IsMatch(_phone, @"^[0-9-]+$")) return false;
                 return true;
+            }
+        }
+
+        public void Load(int id)
+        {
+            var result =
+                DatabaseManager.Instance.ExecuteQuery("SELECT * FROM address WHERE id = ?", new object[] { id });
+            if (result.Count == 0) return; //Don't load if doesn't exist'
+            var row = result[0];
+            Id = Convert.ToInt32(row[0]);
+            Address1 = row[1].ToString();
+            Address2 = row[2].ToString();
+            City.Id = Convert.ToInt32(row[3]);
+            PostalCode = row[4].ToString();
+            Phone = row[5].ToString();
+        }
+
+        public void Create()
+        {
+            if (Id != -1) return; //Don't create if already exists'
+            if (!IsValid) return; //Don't create if invalid'
+
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+            var query =
+                "INSERT INTO address (address1, address2, cityId, postalCode, phone, createDate, createdBy,lastUpdate, lastUpdateBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            var parameters = new object[]
+            {
+                Address1,
+                Address2,
+                City.Id,
+                PostalCode,
+                Phone,
+                timestamp,
+                State.Instance.CurrentUser.Id,
+                timestamp,
+                State.Instance.CurrentUser.Id,
+            };
+            try
+            {
+                DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+        public void Update()
+        {
+            if (Id == -1) return; //Don't update if doesn't exist'
+            if (!IsValid) return; //Don't update if invalid'
+
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            var query =
+                "UPDATE address SET address1 = ?, address2 = ?, cityId = ?, postalCode = ?, phone = ? , lastUpdate = ? , lastUpdateBy = ? WHERE id = ?";
+            var parameters = new object[]
+            {
+                Address1,
+                Address2,
+                City.Id,
+                PostalCode,
+                Phone,
+                Id,
+                timestamp,
+                State.Instance.CurrentUser.Id
+            };
+            try
+            {
+                DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+        public void Delete()
+        {
+            if (Id == -1) return; //Don't delete if doesn't exist'
+            var query = "DELETE FROM address WHERE id = ?";
+            var parameters = new object[] { Id };
+            try
+            {
+                DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
             }
         }
     }

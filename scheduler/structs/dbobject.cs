@@ -7,7 +7,7 @@ namespace scheduler.structs
     /// </summary>
     public class DBObject
     {
-        public int Id { get; } = -1;
+        public int Id { get; set; } = -1;
         public DateTime CreatedAt { get; }
         public User CreatedBy { get; } = null;
         public DateTime UpdatedAt { get; }

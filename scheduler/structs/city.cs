@@ -1,3 +1,5 @@
+using scheduler.database;
+
 namespace scheduler.structs
 {
     /// <summary>
@@ -9,5 +11,9 @@ namespace scheduler.structs
     {
         public string Name { get; set; } = string.Empty;
         public Country Country { get; set; } = new Country();
+
+        public void Update()
+        {
+        }
     }
 }
