@@ -125,7 +125,9 @@ namespace scheduler
         private bool ValidateLogin()
         {
             var user = new User { Name = UsernameTextBox.Text };
-            return user.Authenticated(PasswordTextBox.Password);
+            bool result = user.Authenticated(PasswordTextBox.Password);
+            if (result) State.Instance.CurrentUser = user;
+            return result;
         }
 
         private void PasswordTextBox_OnKeyUp(object sender, KeyEventArgs e)
