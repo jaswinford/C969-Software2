@@ -70,5 +70,23 @@ namespace scheduler.structs
 
             return false;
         }
+
+        public int Id
+        {
+            get
+            {
+                try
+                {
+                    var result =
+                        DatabaseManager.Instance.ExecuteQuery("SELECT id FROM user WHERE userName = '" + Name + "'")
+                            [0][0];
+                    return Convert.ToInt32(result); // Convert to Int32 to avoid overflows;
+                }
+                catch
+                {
+                    return -1;
+                }
+            }
+        }
     }
 }
