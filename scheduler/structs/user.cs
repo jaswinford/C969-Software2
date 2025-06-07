@@ -68,17 +68,17 @@ namespace scheduler.structs
 
         public override void Create()
         {
-            throw new NotImplementedException();
+            MessageBox.Show("Unable to create user. Please use the database directly.");
         }
 
         public override void Update()
         {
-            throw new NotImplementedException();
+            MessageBox.Show("Unable to update user. Please use the database directly.");
         }
 
         public override void Delete()
         {
-            throw new NotImplementedException();
+            MessageBox.Show("Unable to delete user. Please use the database directly.");
         }
 
         public override bool IsValid => Name != string.Empty;
