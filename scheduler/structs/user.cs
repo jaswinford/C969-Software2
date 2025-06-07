@@ -13,21 +13,14 @@ namespace scheduler.structs
     public class User : DBObject
     {
         public string Name { get; set; } = string.Empty; // userName VARCHAR(50)
-        private bool IsActive { get; set; } = false;
+        private bool IsActive { get; set; }
 
         public User(string name)
         {
-            Name = name;
-            Load();
-        }
-
-        public User(int id)
-        {
-            Id = id;
-            var result =
-                DatabaseManager.Instance.ExecuteQuery("SELECT userName FROM user WHERE userId = ?",
-                    new object[] { Id })[0];
-            Name = result[0].ToString();
+            var result = DatabaseManager.Instance.ExecuteQuery("SELECT userId from user WHERE userName = ?",
+                new object[] { name });
+            if (result.Count == 0) throw new Exception("User not found"); //Don't load if doesn't exist
+            Id = Convert.ToInt32(result[0][0]);
             Load();
         }
 
@@ -64,13 +57,30 @@ namespace scheduler.structs
         public override void Load()
         {
             var result =
-                DatabaseManager.Instance.ExecuteQuery("SELECT userId,userName,active FROM user WHERE userName = ?",
-                    new object[] { Name });
+                DatabaseManager.Instance.ExecuteQuery("SELECT userId,userName,active FROM user WHERE userId = ?",
+                    new object[] { Id });
             if (result.Count == 0) return; //Don't load if doesn't exist'
             var row = result[0];
             Id = Convert.ToInt32(row[0]);
             Name = row[1].ToString();
             IsActive = Convert.ToBoolean(row[2]);
         }
+
+        public override void Create()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Update()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Delete()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool IsValid => Name != string.Empty;
     }
 }

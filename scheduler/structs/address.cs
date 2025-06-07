@@ -10,11 +10,14 @@ namespace scheduler.structs
     /// </summary>
     public class Address : DBObject
     {
+        // Private Variables
         private string _address1;
         private string _address2;
         private string _phone;
         private string _postalCode;
 
+
+        // Public Variables
         public int Id { get; set; } = -1;
 
         public string Address1
@@ -65,6 +68,8 @@ namespace scheduler.structs
             }
         }
 
+        // Functions
+
         public override void Load()
         {
             var result =
@@ -93,7 +98,7 @@ namespace scheduler.structs
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
             var query =
-                "INSERT INTO address (address1, address2, cityId, postalCode, phone, createDate, createdBy,lastUpdate, lastUpdateBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "INSERT INTO address (address, address2, cityId, postalCode, phone, createDate, createdBy,lastUpdate, lastUpdateBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             var parameters = new object[]
             {
                 Address1,
@@ -123,7 +128,7 @@ namespace scheduler.structs
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var query =
-                "UPDATE address SET address1 = ?, address2 = ?, cityId = ?, postalCode = ?, phone = ? , lastUpdate = ? , lastUpdateBy = ? WHERE id = ?";
+                "UPDATE address SET address = ?, address2 = ?, cityId = ?, postalCode = ?, phone = ? , lastUpdate = ? , lastUpdateBy = ? WHERE addressId = ?";
             var parameters = new object[]
             {
                 Address1,
@@ -148,7 +153,7 @@ namespace scheduler.structs
         public override void Delete()
         {
             if (Id == -1) return; //Don't delete if doesn't exist'
-            var query = "DELETE FROM address WHERE id = ?";
+            var query = "DELETE FROM address WHERE addressId = ?";
             var parameters = new object[] { Id };
             try
             {

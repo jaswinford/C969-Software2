@@ -37,12 +37,6 @@ namespace scheduler.structs
             End.Hour > 9 && End.Hour < 17 &&
             Start.TimeOfDay < End.TimeOfDay;
 
-        public Appointment(int id)
-        {
-            Id = id;
-            Load(id);
-        }
-
         public Appointment()
         {
             Id = -1;
@@ -53,7 +47,7 @@ namespace scheduler.structs
             if (Id == -1) throw new Exception("Cannot load appointment with no ID");
 
             var result = DatabaseManager.Instance.ExecuteQuery(
-                "SELECT appointmentId, customerId, userId, title, description, location, contact, type, url, start, end, createDate, createdBy, lastUpdate, lastUpdateBy FROM appointment WHERE id = ?",
+                "SELECT appointmentId, customerId, userId, title, description, location, contact, type, url, start, end, createDate, createdBy, lastUpdate, lastUpdateBy FROM appointment WHERE appointmentId = ?",
                 new object[] { Id })[0];
             Id = Convert.ToInt32(result[0]);
             Customer.Id = Convert.ToInt32(result[1]);
@@ -115,7 +109,7 @@ namespace scheduler.structs
 
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             string query =
-                "UPDATE appointment SET customerId = ?, userId = ?, title = ?, description = ?, location = ?, contact = ?, type = ?, url = ?, start = ?, end = ?, lastUpdate = ?, lastUpdateBy = ? WHERE id = ?";
+                "UPDATE appointment SET customerId = ?, userId = ?, title = ?, description = ?, location = ?, contact = ?, type = ?, url = ?, start = ?, end = ?, lastUpdate = ?, lastUpdateBy = ? WHERE appointmentId = ?";
             var parameters = new object[]
             {
                 Customer.Id,
@@ -137,7 +131,7 @@ namespace scheduler.structs
 
         public override void Delete()
         {
-            string query = "DELETE FROM appointment WHERE id = ?";
+            string query = "DELETE FROM appointment WHERE appointmentId = ?";
             DatabaseManager.Instance.ExecuteNonQuery(query, new object[] { Id });
         }
     }

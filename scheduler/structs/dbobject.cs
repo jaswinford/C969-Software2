@@ -30,6 +30,15 @@ namespace scheduler.structs
         public abstract void Delete();
         public abstract bool IsValid { get; }
 
+        public DBObject()
+        {
+        }
+
+        public DBObject(int id)
+        {
+            Id = id;
+            Load();
+        }
 
         public void Load(int id)
         {

@@ -7,78 +7,79 @@ namespace scheduler.structs
     /// <summary>
     /// Customer object and logic to interact with DB for customer records
     /// </summary>
-    ///
-    /// TODO: Add member variables
-    /// TODO: 'Add' Function
-    /// TODO: 'Update' Function
-    /// TODO: 'Delete' Function
-    /// TODO: 'Validate' Function
-    public partial class Customer : DBObject
+    public class Customer : DBObject
     {
-        private bool _modified = false; //Track if the object is different from DB
-        private string _name = string.Empty;
-        private string _phone = string.Empty;
-        private Address _address = new Address();
+        // Public Variables
+        public string Name;
+        public Address Address;
+        public bool IsActive;
 
-        public string Name
+        public override void Load()
         {
-            get => _name;
-            set
-            {
-                if (value == String.Empty) return; //Don't allow empty names
-                _modified = true;
-                _name = value;
-            }
+            if (Id == -1) throw new Exception("Cannot load customer with no ID");
+
+            var result = DatabaseManager.Instance.ExecuteQuery(
+                "SELECT customerId, customerName, addressId, active, createDate, createdBy, lastUpdate, LastUpdateBy FROM customer WHERE customerId = ?",
+                new object[] { Id })[0];
+            Id = Convert.ToInt32(result[0]);
+            Name = result[1].ToString();
+            Address.Id = Convert.ToInt32(result[2]);
+            IsActive = Convert.ToBoolean(result[3]);
+            CreatedAt = DateTime.Parse(result[4].ToString());
+            CreatedBy = result[5].ToString();
+            UpdatedAt = DateTime.Parse(result[6].ToString());
+            UpdatedBy = result[7].ToString();
         }
 
-        public Address Address
+        public override void Create()
         {
-            get => _address;
-            set
-            {
-                if (!value.IsValid) return; //Do not update with invalid address
-                _modified = true;
-                _address = value;
-            }
-        } // addressId INT(10)
+            if (!IsValid) throw new Exception("Cannot create customer with invalid data");
+            if (Id != -1) throw new Exception("Cannot create customer with ID");
 
-        public bool IsActive
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string query =
+                "INSERT INTO customer (customerName, addressId, active, createDate, createdBy) VALUES (?, ?, ?, ?, ?)";
+            var parameters = new object[]
+            {
+                Name,
+                Address.Id,
+                IsActive,
+                timestamp,
+                State.Instance.CurrentUser.Name,
+                timestamp,
+                State.Instance.CurrentUser.Name
+            };
+            DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+        }
+
+        public override void Update()
         {
-            get //Important enough to warrant always getting from DB 
-            {
-                if (Id == -1) return false; //If they're not in the DB, they're not active
-                var result =
-                    DatabaseManager.Instance.ExecuteQuery("SELECT active FROM customer WHERE id = ?",
-                        new object[] { Id })[0][0];
-                return Convert.ToBoolean(result); //Convert to bool to avoid overflows;
-            }
-            set
-            {
-                var parameters = new object[] { value, Id };
-                DatabaseManager.Instance.ExecuteNonQuery("UPDATE customer SET active = ? WHERE id = ?", parameters);
-            }
-        } // active TINYINT(1)
+            if (!IsValid) throw new Exception("Cannot update customer with invalid data");
+            if (Id == -1) throw new Exception("Cannot update customer with no ID");
 
-        public string Phone
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string query =
+                "UPDATE customer SET customerName = ?, addressId = ?, active = ?, lastUpdate = ?, lastUpdateBy = ? WHERE customerId = ?";
+            var parameters = new object[]
+            {
+                Name,
+                Address.Id,
+                IsActive,
+                timestamp,
+                State.Instance.CurrentUser.Name,
+                Id
+            };
+            DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+        }
+
+        public override void Delete()
         {
-            get => _phone;
-            set
-            {
-                if (!ValidatePhone(value)) return; //Don't allow invalid phone numbers
-                _modified = true;
-                _phone = value;
-            }
-        } // phone VARCHAR(20)
+            string query = "DELETE FROM customer WHERE customerId = ?";
+            DatabaseManager.Instance.ExecuteNonQuery(query, new object[] { Id });
+        }
 
-        public bool IsValid =>
+        public override bool IsValid =>
             Name != string.Empty &&
-            ValidatePhone(Phone) &&
             Address.IsValid;
-
-        public static bool ValidatePhone(string value)
-        {
-            return System.Text.RegularExpressions.Regex.IsMatch(value, "^[0-9-]+$") && value.Length <= 20 &&
-                   value.Length >= 10;
-        }
     }
 }

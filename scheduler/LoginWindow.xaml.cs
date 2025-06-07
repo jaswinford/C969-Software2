@@ -124,7 +124,7 @@ namespace scheduler
         /// <returns>True if the credentials are valid and the user is authenticated; otherwise, false.</returns>
         private bool ValidateLogin()
         {
-            var user = new User { Name = UsernameTextBox.Text };
+            var user = new User(UsernameTextBox.Text);
             bool result = user.Authenticated(PasswordTextBox.Password);
             if (result) State.Instance.CurrentUser = user;
             return result;
