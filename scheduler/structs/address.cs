@@ -16,10 +16,6 @@ namespace scheduler.structs
         private string _phone;
         private string _postalCode;
 
-
-        // Public Variables
-        public int Id { get; set; } = -1;
-
         public string Address1
         {
             get => _address1;
@@ -74,7 +70,7 @@ namespace scheduler.structs
         {
             var result =
                 DatabaseManager.Instance.ExecuteQuery(
-                    "SELECT addressId, address, address2, cityId, postalCode, phone, createDate, createdBy,  FROM address WHERE id = ?",
+                    "SELECT addressId, address, address2, cityId, postalCode, phone, createDate, createdBy, lastUpdate, lastUpdateBy FROM address WHERE addressId = ?",
                     new object[] { Id });
             if (result.Count == 0) return; //Don't load if doesn't exist'
             var row = result[0];
@@ -101,15 +97,15 @@ namespace scheduler.structs
                 "INSERT INTO address (address, address2, cityId, postalCode, phone, createDate, createdBy,lastUpdate, lastUpdateBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             var parameters = new object[]
             {
-                Address1,
-                Address2,
+                DatabaseManager.SanitizeString(Address1),
+                DatabaseManager.SanitizeString(Address2),
                 City.Id,
                 PostalCode,
-                Phone,
+                DatabaseManager.SanitizeString(Phone),
                 timestamp,
-                State.Instance.CurrentUser.Name,
+                DatabaseManager.SanitizeString(State.Instance.CurrentUser.Name),
                 timestamp,
-                State.Instance.CurrentUser.Name,
+                DatabaseManager.SanitizeString(State.Instance.CurrentUser.Name)
             };
             try
             {
