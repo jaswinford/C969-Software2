@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using scheduler.database;
 
 namespace scheduler
 {
@@ -23,6 +24,7 @@ namespace scheduler
         public MainWindow()
         {
             InitializeComponent();
+            CustomersDataGrid.ItemsSource = DatabaseManager.Instance.ExecuteQuery("SELECT * FROM customer");
         }
     }
 }
