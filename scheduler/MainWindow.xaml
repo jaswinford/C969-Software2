@@ -13,15 +13,62 @@
                         <RowDefinition />
                         <RowDefinition />
                     </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                        </Grid.RowDefinitions>
 
-                    <DataGrid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="CustomersDataGrid" />
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Customer ID -->
+                        <Label Grid.Row="0" Grid.Column="0" Content="ID:" />
+                        <Label Grid.Row="0" Grid.Column="1" Name="custIDLabel" Content="" />
+
+                        <!-- Customer Name -->
+                        <Label Grid.Row="1" Grid.Column="0" Content="Name" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Name="custNameTextBox" />
+
+                        <!--Customer active-->
+                        <Label Grid.Row="0" Grid.Column="2" Content="Is Active" />
+                        <CheckBox Grid.Row="0" Grid.Column="3" Name="custActiveCheck" />
+
+                        <!--Customer Address -->
+                        <Button Grid.Row="2" Grid.Column="0" Content="Address" Click="AddressClick"
+                                VerticalAlignment="Top" HorizontalContentAlignment="Left" />
+                        <Label Grid.Row="2" Grid.Column="1" Name="custAddressLabel" />
+
+                        <!--Customer Created/Updated Info -->
+                        <Label Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Name="custCreatedLabel"
+                               Content="Created " />
+                        <Label Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Name="custUpdatedLabel"
+                               Content="Updated " />
+
+                    </Grid>
+
+                    <DataGrid Grid.Row="1" Grid.Column="0" SelectionChanged="CustomersDataGrid_OnSelectionChanged"
+                              Name="CustomersDataGrid" ItemsSource="{Binding}" IsReadOnly="True" />
                 </Grid>
             </TabItem>
             <TabItem Header="Appointments">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <Grid></Grid>
+                    <DataGrid Grid.Row="1" SelectionChanged="AppointmentsDataGrid_OnSelectionChanged"
+                              Name="AppointmentsDataGrid" ItemsSource="{Binding}" IsReadOnly="True" />
+                </Grid>
 
             </TabItem>
         </TabControl>

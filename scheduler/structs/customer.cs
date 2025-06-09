@@ -1,5 +1,6 @@
 using System;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using MySql.Data.MySqlClient;
 using scheduler.database;
 
 namespace scheduler.structs
@@ -11,24 +12,44 @@ namespace scheduler.structs
     {
         // Public Variables
         public string Name;
-        public Address Address;
+        public Address Address = new Address();
         public bool IsActive;
+
+        public Customer()
+        {
+            Id = -1;
+        }
+
+        public Customer(int id)
+        {
+            Id = id;
+            Load();
+        }
 
         public override void Load()
         {
+            Address = new Address();
             if (Id == -1) throw new Exception("Cannot load customer with no ID");
 
-            var result = DatabaseManager.Instance.ExecuteQuery(
-                "SELECT customerId, customerName, addressId, active, createDate, createdBy, lastUpdate, LastUpdateBy FROM customer WHERE customerId = ?",
-                new object[] { Id })[0];
-            Id = Convert.ToInt32(result[0]);
-            Name = result[1].ToString();
-            Address.Id = Convert.ToInt32(result[2]);
-            IsActive = Convert.ToBoolean(result[3]);
-            CreatedAt = DateTime.Parse(result[4].ToString());
-            CreatedBy = result[5].ToString();
-            UpdatedAt = DateTime.Parse(result[6].ToString());
-            UpdatedBy = result[7].ToString();
+            try
+            {
+                var result = DatabaseManager.Instance.ExecuteQuery(
+                    "SELECT customerId, customerName, addressId, active, createDate, createdBy, lastUpdate, LastUpdateBy FROM customer WHERE customerId = @id",
+                    new List<MySqlParameter> { new MySqlParameter("@id", Id) })[0];
+                Id = (int)result[0];
+                Name = (string)result[1];
+                Address.Id = (int)result[2];
+                Address.Load();
+                IsActive = Convert.ToBoolean(result[3]);
+                CreatedAt = DateTime.Parse(result[4].ToString());
+                CreatedBy = result[5].ToString();
+                UpdatedAt = DateTime.Parse(result[6].ToString());
+                UpdatedBy = result[7].ToString();
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Cannot load customer with ID: " + Id + "\n" + e.Message);
+            }
         }
 
         public override void Create()

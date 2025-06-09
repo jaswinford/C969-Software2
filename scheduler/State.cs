@@ -7,13 +7,13 @@ namespace scheduler
         private static State _instance;
         private static readonly object _lock = new object();
 
-        public User CurrentUser { get; set; }
-        public ApplicationSettings Settings { get; set; }
+        public User CurrentUser = new User();
+        public Customer CurrentCustomer = new Customer();
+        public Address CurrentAddress = new Address();
 
         // Private constructor to prevent direct instantiation
         private State()
         {
-            Settings = new ApplicationSettings();
         }
 
         public static State Instance
@@ -35,17 +35,15 @@ namespace scheduler
             }
         }
 
+        public Appointment CurrentAppointment { get; set; }
+
         // Method to reset state
         public void Reset()
         {
             CurrentUser = null;
-            Settings = new ApplicationSettings();
+            CurrentCustomer = null;
+            CurrentAddress = null;
+            CurrentAppointment = null;
         }
-    }
-
-    // You can define this class based on your needs
-    public class ApplicationSettings
-    {
-        // Add other application-wide settings as needed
     }
 }

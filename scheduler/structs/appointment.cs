@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Documents;
+using MySql.Data.MySqlClient;
 using scheduler.database;
 
 namespace scheduler.structs
@@ -24,7 +27,6 @@ namespace scheduler.structs
         public string Url { get; set; } // url VARCHAR(255)
         public DateTime Start { get; set; } // start DATETIME
         public DateTime End { get; set; } // end DATETIME
-        public int Id { get; set; }
 
         public override bool IsValid =>
             Customer.Id != -1 &&
@@ -42,13 +44,19 @@ namespace scheduler.structs
             Id = -1;
         }
 
+        public Appointment(int id)
+        {
+            Id = id;
+            Load();
+        }
+
         public override void Load()
         {
             if (Id == -1) throw new Exception("Cannot load appointment with no ID");
 
             var result = DatabaseManager.Instance.ExecuteQuery(
-                "SELECT appointmentId, customerId, userId, title, description, location, contact, type, url, start, end, createDate, createdBy, lastUpdate, lastUpdateBy FROM appointment WHERE appointmentId = ?",
-                new object[] { Id })[0];
+                "SELECT appointmentId, customerId, userId, title, description, location, contact, type, url, start, end, createDate, createdBy, lastUpdate, lastUpdateBy FROM appointment WHERE appointmentId = @id",
+                new List<MySqlParameter> { new MySqlParameter("@id", Id) })[0];
             Id = Convert.ToInt32(result[0]);
             Customer.Id = Convert.ToInt32(result[1]);
             User.Id = Convert.ToInt32(result[2]);

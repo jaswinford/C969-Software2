@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
+using MySql.Data.MySqlClient;
 using scheduler.database;
 
 namespace scheduler.structs
@@ -16,6 +18,7 @@ namespace scheduler.structs
         private string _phone;
         private string _postalCode;
 
+        // Public Variables
         public string Address1
         {
             get => _address1;
@@ -70,8 +73,8 @@ namespace scheduler.structs
         {
             var result =
                 DatabaseManager.Instance.ExecuteQuery(
-                    "SELECT addressId, address, address2, cityId, postalCode, phone, createDate, createdBy, lastUpdate, lastUpdateBy FROM address WHERE addressId = ?",
-                    new object[] { Id });
+                    "SELECT addressId, address, address2, cityId, postalCode, phone, createDate, createdBy, lastUpdate, lastUpdateBy FROM address WHERE addressId = @id",
+                    new List<MySqlParameter> { new MySqlParameter("@id", Id) });
             if (result.Count == 0) return; //Don't load if doesn't exist'
             var row = result[0];
             Id = Convert.ToInt32(row[0]);
@@ -88,7 +91,12 @@ namespace scheduler.structs
 
         public override void Create()
         {
-            if (Id != -1) return; //Don't create if already exists'
+            if (Id != -1)
+            {
+                Update();
+                return;
+            } //If it already exists, Update it.
+
             if (!IsValid) return; //Don't create if invalid'
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -119,7 +127,12 @@ namespace scheduler.structs
 
         public override void Update()
         {
-            if (Id == -1) return; //Don't update if doesn't exist'
+            if (Id == -1)
+            {
+                Create(); //If it doesn't exist, create it.
+                return;
+            }
+
             if (!IsValid) return; //Don't update if invalid'
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -159,6 +172,22 @@ namespace scheduler.structs
             {
                 MessageBox.Show(e.Message);
             }
+        }
+
+        public override string ToString()
+        {
+            string output = "";
+            if (Address1 != string.Empty) output += Address1 + "\n";
+            if (Address2 != string.Empty) output += Address2 + "\n";
+            if (City.Name != string.Empty) output += City.Name + ", ";
+            if (PostalCode != string.Empty) output += PostalCode + "\n";
+            if (Phone != string.Empty) output += Phone;
+            return output;
+        }
+
+        public Address()
+        {
+            City = new City();
         }
     }
 }

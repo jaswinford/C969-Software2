@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
+using System.Windows.Documents;
 using MySql.Data.MySqlClient;
 
 namespace scheduler.database
@@ -61,25 +62,34 @@ namespace scheduler.database
             return ExecuteQuery(query, null);
         }
 
-        public List<object[]> ExecuteQuery(string query, params object[] parameters)
+        public List<object[]> ExecuteQuery(string query, List<MySqlParameter> parameters)
         {
             try
             {
                 Instance.Connect();
                 using (var cmd = new MySqlCommand(query, Instance.Connection))
                 {
-                    if (parameters != null) cmd.Parameters.AddRange(parameters);
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        var result = new List<object[]>();
-                        while (reader.Read())
-                        {
-                            var row = new object[reader.FieldCount];
-                            reader.GetValues(row);
-                            result.Add(row);
-                        }
+                    if (parameters != null) cmd.Parameters.AddRange(parameters.ToArray());
 
-                        return result;
+                    try
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            var result = new List<object[]>();
+                            while (reader.Read())
+                            {
+                                var row = new object[reader.FieldCount];
+                                reader.GetValues(row);
+                                result.Add(row);
+                            }
+
+                            return result;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(e.Message);
+                        return null;
                     }
                 }
             }
@@ -187,6 +197,20 @@ namespace scheduler.database
             input = SanitizeString(input);
             if (input.Length > maxLength) input = input.Substring(0, maxLength);
             return input;
+        }
+
+        public DataTable GetDataTable(string query)
+        {
+            Connect();
+            var dt = new DataTable();
+            using (var cmd = new MySqlCommand(query, Connection))
+            {
+                using (var adapter = new MySqlDataAdapter(cmd))
+                {
+                    adapter.Fill(dt);
+                    return dt;
+                }
+            }
         }
     }
 }

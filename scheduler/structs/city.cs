@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using MySql.Data.MySqlClient;
 using scheduler.database;
 
 namespace scheduler.structs
@@ -18,8 +20,8 @@ namespace scheduler.structs
             if (Id == -1) throw new Exception("Cannot load city with no ID");
 
             var result = DatabaseManager.Instance.ExecuteQuery(
-                "SELECT cityId, countryId, city, createDate,createdBy,lastUpdate,lastUpdateBy FROM city WHERE cityId = ?",
-                new object[] { Id })[0];
+                "SELECT cityId, countryId, city, createDate,createdBy,lastUpdate,lastUpdateBy FROM city WHERE cityId = @id",
+                new List<MySqlParameter> { new MySqlParameter("@id", Id) })[0];
             Id = Convert.ToInt32(result[0]);
             Country.Id = Convert.ToInt32(result[1]);
             Name = result[2].ToString();
@@ -35,10 +37,15 @@ namespace scheduler.structs
             Load();
         }
 
+        public City()
+        {
+        }
+
         public static City Lookup(string name)
         {
             var result =
-                DatabaseManager.Instance.ExecuteQuery("SELECT cityId FROM city WHERE city = ?", new object[] { name });
+                DatabaseManager.Instance.ExecuteQuery("SELECT cityId FROM city WHERE city = @name",
+                    new List<MySqlParameter> { new MySqlParameter("@name", name) });
             if (result.Count == 0) return null;
             return new City(Convert.ToInt32(result[0][0]));
         }

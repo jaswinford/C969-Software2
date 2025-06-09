@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using MySql.Data.MySqlClient;
 using scheduler.database;
@@ -15,10 +16,16 @@ namespace scheduler.structs
         public string Name { get; set; } = string.Empty; // userName VARCHAR(50)
         private bool IsActive { get; set; }
 
+        public User()
+        {
+        }
+
         public User(string name)
         {
-            var result = DatabaseManager.Instance.ExecuteQuery("SELECT userId from user WHERE userName = ?",
-                new object[] { name });
+            List<MySqlParameter> parameters = new List<MySqlParameter>();
+            parameters.Add(new MySqlParameter("@name", name));
+            var result = DatabaseManager.Instance.ExecuteQuery("SELECT userId from user WHERE userName = @name",
+                parameters);
             if (result.Count == 0) throw new Exception("User not found"); //Don't load if doesn't exist
             Id = Convert.ToInt32(result[0][0]);
             Load();
@@ -57,8 +64,8 @@ namespace scheduler.structs
         public override void Load()
         {
             var result =
-                DatabaseManager.Instance.ExecuteQuery("SELECT userId,userName,active FROM user WHERE userId = ?",
-                    new object[] { Id });
+                DatabaseManager.Instance.ExecuteQuery("SELECT userId,userName,active FROM user WHERE userId = @id",
+                    new List<MySqlParameter> { new MySqlParameter("@id", Id) });
             if (result.Count == 0) return; //Don't load if doesn't exist'
             var row = result[0];
             Id = Convert.ToInt32(row[0]);

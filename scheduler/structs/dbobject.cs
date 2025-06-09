@@ -7,22 +7,11 @@ namespace scheduler.structs
     /// </summary>
     public abstract class DBObject
     {
-        private int _id = -1;
-
-        public int Id
-        {
-            get => _id;
-            set
-            {
-                _id = value;
-                this.Load();
-            }
-        }
-
-        public DateTime CreatedAt { get; set; }
-        public string CreatedBy { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public string UpdatedBy { get; set; }
+        public int Id;
+        public DateTime CreatedAt;
+        public string CreatedBy;
+        public DateTime UpdatedAt;
+        public string UpdatedBy;
 
         public abstract void Load();
         public abstract void Create();
@@ -32,6 +21,12 @@ namespace scheduler.structs
 
         public DBObject()
         {
+        }
+
+        public void Save()
+        {
+            if (Id == -1) Create();
+            else Update();
         }
 
         public DBObject(int id)

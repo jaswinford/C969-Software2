@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Windows.Documents;
+using MySql.Data.MySqlClient;
 using scheduler.database;
 
 namespace scheduler.structs
@@ -15,8 +18,8 @@ namespace scheduler.structs
             if (Id == -1) throw new System.Exception("Cannot load country with no ID");
 
             var result = DatabaseManager.Instance.ExecuteQuery(
-                "SELECT countryId, country, createDate,createdBy,lastUpdate,lastUpdateBy FROM country WHERE countryId = ?",
-                new object[] { Id })[0];
+                "SELECT countryId, country, createDate,createdBy,lastUpdate,lastUpdateBy FROM country WHERE countryId = @id",
+                new List<MySqlParameter> { new MySqlParameter("@id", Id) })[0];
             Id = Convert.ToInt32(result[0]);
             Name = result[1].ToString();
             CreatedAt = DateTime.Parse(result[2].ToString());
