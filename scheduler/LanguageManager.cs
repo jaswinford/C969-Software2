@@ -11,7 +11,7 @@ namespace scheduler
 {
     public class LanguageManager
     {
-        private static LanguageManager _instance;
+        private static LanguageManager? _instance;
         private readonly ResourceManager _resourceManager;
         private CultureInfo _currentCulture;
 
@@ -50,7 +50,7 @@ namespace scheduler
                     Thread.CurrentThread.CurrentCulture = newCulture;
                     Thread.CurrentThread.CurrentUICulture = newCulture;
                     MessageBox.Show("Language not supported. Defaulting to English.", "Language Error",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
 
                 LanguageChanged?.Invoke(this, EventArgs.Empty);
@@ -99,8 +99,8 @@ namespace scheduler
             }
         }
 
-        public MessageBoxResult ShowMessageBox(string messageKey, string captionKey, MessageBoxButton buttons,
-            MessageBoxImage icon)
+        public DialogResult ShowMessageBox(string messageKey, string captionKey, MessageBoxButtons buttons,
+            MessageBoxIcon icon)
         {
             var message = GetTranslation(messageKey);
             var caption = GetTranslation(captionKey);

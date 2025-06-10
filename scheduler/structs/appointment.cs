@@ -1,36 +1,91 @@
-using System;
-using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Documents;
-using MySql.Data.MySqlClient;
-using scheduler.database;
+using Microsoft.Data.SqlClient;
 
-namespace scheduler.structs
+namespace scheduler
 {
-    /// <summary>
-    /// Appointment object and logic to interact with DB for appointment records
-    /// </summary>
-    ///
-    /// TODO: Add member variables
-    /// TODO: 'Add' Function
-    /// TODO: 'Update' Function
-    /// TODO: 'Delete' Function
-    public class Appointment : DBObject
+    public class Appointment
     {
-        public Customer Customer { get; set; } // customerId INT(10)
-        public User User { get; set; } // userId INT
-        public string Title { get; set; } // title VARCHAR(255)
-        public string Description { get; set; } // description TEXT
-        public string Location { get; set; } // location TEXT
-        public string Contact { get; set; } // contact TEXT
-        public string Type { get; set; } // type TEXT
-        public string Url { get; set; } // url VARCHAR(255)
-        public DateTime Start { get; set; } // start DATETIME
-        public DateTime End { get; set; } // end DATETIME
+        public int appointmentId = -1; // appointmentId INT
+        public Customer Customer = new Customer(); // customerId INT
+        public User User = new User(); // userId INT
+        public string Title = string.Empty; // title VARCHAR(50)
+        public string Description = string.Empty; // description VARCHAR(50)
+        public string Location = string.Empty; // location VARCHAR(50)
+        public string Contact = string.Empty; // contact VARCHAR(50)
+        public string Type = string.Empty; // type VARCHAR(50)
+        public string Url = string.Empty; // url VARCHAR(100)
+        public DateTime Start = DateTime.Now; // start DATETIME
+        public DateTime End = DateTime.Now; // end DATETIME
+        public DateTime CreatedAt = DateTime.Now; // createDate DATETIME
+        public string CreatedBy = string.Empty; // createdBy VARCHAR(50)
+        public DateTime UpdatedAt = DateTime.Now; // lastUpdate DATETIME
+        public string UpdatedBy = string.Empty; // lastUpdateBy VARCHAR(50)
 
-        public override bool IsValid =>
-            Customer.Id != -1 &&
-            User.Id != -1 &&
+
+        public static explicit operator Appointment(SqlDataReader reader)
+        {
+            var appointment = new Appointment();
+            if (reader.Read())
+            {
+                appointment.appointmentId = (int)reader["appointmentId"]; // appointmentId INT
+                appointment.Customer = new Customer((int)reader["customerId"]); // customerId INT
+                appointment.User = new User((int)reader["userId"]); // userId INT
+                appointment.Title = (string)reader["title"]; // title VARCHAR(50)
+                appointment.Description = (string)reader["description"]; // description VARCHAR(50)
+                appointment.Location = (string)reader["location"]; // location VARCHAR(50)
+                appointment.Contact = (string)reader["contact"]; // contact VARCHAR(50)
+                appointment.Type = (string)reader["type"]; // type VARCHAR(50)
+                appointment.Url = (string)reader["url"]; // url VARCHAR(100)
+                appointment.Start = (DateTime)reader["start"]; // start DATETIME
+                appointment.End = (DateTime)reader["end"]; // end DATETIME
+                appointment.CreatedAt = (DateTime)reader["createDate"]; // createDate DATETIME
+                appointment.CreatedBy = (string)reader["createdBy"]; // createdBy VARCHAR(50)
+                appointment.UpdatedAt = (DateTime)reader["lastUpdate"]; // lastUpdate DATETIME
+                appointment.UpdatedBy = (string)reader["lastUpdateBy"]; // lastUpdateBy VARCHAR(50)
+            }
+
+            return appointment;
+        }
+
+        public Appointment(int id = -1)
+        {
+            appointmentId = id;
+            if (appointmentId == -1) return; // If the appointmentId is -1, do not load the appointment
+            string _connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MySQLConnection"]
+                .ConnectionString;
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                string query = "SELECT * FROM appointment WHERE appointmentId = @id";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", appointmentId);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            Customer = new Customer((int)reader["customerId"]); // customerId INT
+                            User = new User((int)reader["userId"]); // userId INT
+                            Title = (string)reader["title"]; // title VARCHAR(50)
+                            Description = (string)reader["description"]; // description VARCHAR(50)
+                            Location = (string)reader["location"]; // location VARCHAR(50)
+                            Contact = (string)reader["contact"]; // contact VARCHAR(50)
+                            Type = (string)reader["type"]; // type VARCHAR(50)
+                            Url = (string)reader["url"]; // url VARCHAR(100)
+                            Start = (DateTime)reader["start"]; // start DATETIME
+                            End = (DateTime)reader["end"]; // end DATETIME
+                            CreatedAt = (DateTime)reader["createDate"]; // createDate DATETIME
+                            CreatedBy = (string)reader["createdBy"]; // createdBy VARCHAR(50)
+                            UpdatedAt = (DateTime)reader["lastUpdate"]; // lastUpdate DATETIME
+                            UpdatedBy = (string)reader["lastUpdateBy"]; // lastUpdateBy VARCHAR(50)
+                        }
+                    }
+                }
+            }
+        }
+
+        public bool IsValid =>
+            Customer.customerId != -1 &&
+            User.userId != -1 &&
             Start.DayOfWeek != DayOfWeek.Saturday &&
             Start.DayOfWeek != DayOfWeek.Sunday &&
             End.DayOfWeek != DayOfWeek.Saturday &&
@@ -39,108 +94,16 @@ namespace scheduler.structs
             End.Hour > 9 && End.Hour < 17 &&
             Start.TimeOfDay < End.TimeOfDay;
 
-        public Appointment()
+        public void Create()
         {
-            Id = -1;
         }
 
-        public Appointment(int id)
+        public void Update()
         {
-            Id = id;
-            Load();
         }
 
-        public override void Load()
+        public void Delete()
         {
-            if (Id == -1) throw new Exception("Cannot load appointment with no ID");
-
-            var result = DatabaseManager.Instance.ExecuteQuery(
-                "SELECT appointmentId, customerId, userId, title, description, location, contact, type, url, start, end, createDate, createdBy, lastUpdate, lastUpdateBy FROM appointment WHERE appointmentId = @id",
-                new List<MySqlParameter> { new MySqlParameter("@id", Id) })[0];
-            Id = Convert.ToInt32(result[0]);
-            Customer.Id = Convert.ToInt32(result[1]);
-            User.Id = Convert.ToInt32(result[2]);
-            Title = result[3].ToString();
-            Description = result[4].ToString();
-            Location = result[5].ToString();
-            Contact = result[6].ToString();
-            Type = result[7].ToString();
-            Url = result[8].ToString();
-            Start = DateTime.Parse(result[9].ToString());
-            End = DateTime.Parse(result[10].ToString());
-            CreatedAt = DateTime.Parse(result[11].ToString());
-            CreatedBy = result[12].ToString();
-            UpdatedAt = DateTime.Parse(result[13].ToString());
-            UpdatedBy = result[14].ToString();
-        }
-
-        public override void Create()
-        {
-            if (Id != -1) throw new Exception("Cannot create appointment with ID");
-            if (!IsValid) throw new Exception("Cannot create appointment with invalid data");
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-            string query =
-                "INSERT INTO appointment (customerId, userId, title, description, location, contact, type, url, start, end, createDate, createdBy, lastUpdate, lastUpdateBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            var parameters = new object[]
-            {
-                Customer.Id,
-                User.Id,
-                Title,
-                Description,
-                Location,
-                Contact,
-                Type,
-                Url,
-                Start.ToString("yyyy-MM-dd HH:mm:ss"),
-                End.ToString("yyyy-MM-dd HH:mm:ss"),
-                timestamp,
-                State.Instance.CurrentUser.Name,
-                timestamp,
-                State.Instance.CurrentUser.Name
-            };
-            try
-            {
-                DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
-        }
-
-        public override void Update()
-        {
-            if (Id == -1) throw new Exception("Cannot update appointment with no ID");
-            if (!IsValid) throw new Exception("Cannot update appointment with invalid data");
-
-            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string query =
-                "UPDATE appointment SET customerId = ?, userId = ?, title = ?, description = ?, location = ?, contact = ?, type = ?, url = ?, start = ?, end = ?, lastUpdate = ?, lastUpdateBy = ? WHERE appointmentId = ?";
-            var parameters = new object[]
-            {
-                Customer.Id,
-                User.Id,
-                Title,
-                Description,
-                Location,
-                Contact,
-                Type,
-                Url,
-                Start.ToString("yyyy-MM-dd HH:mm:ss"),
-                End.ToString("yyyy-MM-dd HH:mm:ss"),
-                timestamp,
-                State.Instance.CurrentUser.Name,
-                Id
-            };
-            DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
-        }
-
-        public override void Delete()
-        {
-            string query = "DELETE FROM appointment WHERE appointmentId = ?";
-            DatabaseManager.Instance.ExecuteNonQuery(query, new object[] { Id });
         }
     }
 }

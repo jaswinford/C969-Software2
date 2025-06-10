@@ -1,93 +1,92 @@
-using System;
-using System.Collections.Generic;
-using System.Windows;
-using MySql.Data.MySqlClient;
-using scheduler.database;
+using Microsoft.Data.SqlClient;
+using System.Configuration;
 
-namespace scheduler.structs
+namespace scheduler
 {
-    /// <summary>
-    /// User object and logic to interact with DB for user records
-    /// </summary>
-    /// <remarks>
-    /// </remarks>
-    public class User : DBObject
+    public class User
     {
-        public string Name { get; set; } = string.Empty; // userName VARCHAR(50)
-        private bool IsActive { get; set; }
+        public int userId = -1;
+        public string Name = string.Empty; // userName VARCHAR(50)
+        public bool IsActive;
+        public string Password = string.Empty; // password VARCHAR(50)
+        public DateTime CreatedAt; // createDate DATETIME
+        public string CreatedBy = string.Empty; // createdBy VARCHAR(50)
+        public DateTime UpdatedAt; // lastUpdate DATETIME
+        public string UpdatedBy = string.Empty; // lastUpdateBy VARCHAR(50)
 
-        public User()
+        public static explicit operator User(SqlDataReader reader)
         {
+            var user = new User();
+            if (reader.Read())
+            {
+                user.userId = (int)reader["userId"]; // userId INT
+                user.Name = (string)reader["userName"]; // userName VARCHAR(50)
+                user.IsActive = (bool)reader["active"]; // active BOOLEAN
+                user.CreatedAt = (DateTime)reader["createDate"]; // createDate DATETIME
+                user.CreatedBy = (string)reader["createdBy"]; // createdBy VARCHAR(50)
+                user.UpdatedAt = (DateTime)reader["lastUpdate"]; // lastUpdate DATETIME
+                user.UpdatedBy = (string)reader["lastUpdateBy"]; // lastUpdateBy VARCHAR(50)
+                user.Password = (string)reader["password"]; // password VARCHAR(50)
+            }
+
+            return user;
         }
 
-        public User(string name)
+        public User(int id = -1)
         {
-            List<MySqlParameter> parameters = new List<MySqlParameter>();
-            parameters.Add(new MySqlParameter("@name", name));
-            var result = DatabaseManager.Instance.ExecuteQuery("SELECT userId from user WHERE userName = @name",
-                parameters);
-            if (result.Count == 0) throw new Exception("User not found"); //Don't load if doesn't exist
-            Id = Convert.ToInt32(result[0][0]);
-            Load();
+            userId = id;
+            if (userId == -1) return; // If the userId is -1, do not load the user
+            string _connectionString = ConfigurationManager.ConnectionStrings["MySQLConnection"].ConnectionString;
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                string query = "SELECT * FROM user WHERE userId = @id";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", userId);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            Name = (string)reader["userName"];
+                            IsActive = (bool)reader["active"];
+                            CreatedAt = (DateTime)reader["createDate"];
+                            CreatedBy = (string)reader["createdBy"];
+                            UpdatedAt = (DateTime)reader["lastUpdate"];
+                            UpdatedBy = (string)reader["lastUpdateBy"];
+                            Password = (string)reader["password"];
+                        }
+                    }
+                }
+            }
         }
 
-        /// <summary>
-        ///     Authenticates the user by verifying the provided password against the stored password in the database.
-        /// </summary>
-        /// <param name="password">The password to authenticate the user with.</param>
-        /// <returns>
-        ///     Returns true if the provided password matches the stored password for the user and the user is active, otherwise
-        ///     returns false.
-        /// </returns>
         public bool Authenticated(string password)
         {
-            Load(); // Always make sure we're up to date.
-            if (!IsActive) return false;
-
-            try
-            {
-                var result =
-                    DatabaseManager.Instance.ExecuteQuery("SELECT password FROM user WHERE userName = '" + Name + "'")
-                        [0][0];
-                var storedPassword = result.ToString();
-                return storedPassword == password; // Compare stored password with provided password;
-            }
-            catch (MySqlException)
-            {
-                LanguageManager.Instance.ShowMessageBox("Message.SQLError", "Title.SQLError", MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-
+            if (userId == -1) return false; //If the user is not loaded, return false
+            if (string.IsNullOrEmpty(password)) return false; //If the password is empty, return false
+            if (password == Password) return true; //If the password matches, return true
             return false;
         }
 
-        public override void Load()
+
+        // These methods are placeholders for database operations that are not implemented in this example.
+        public void Create()
         {
-            var result =
-                DatabaseManager.Instance.ExecuteQuery("SELECT userId,userName,active FROM user WHERE userId = @id",
-                    new List<MySqlParameter> { new MySqlParameter("@id", Id) });
-            if (result.Count == 0) return; //Don't load if doesn't exist'
-            var row = result[0];
-            Id = Convert.ToInt32(row[0]);
-            Name = row[1].ToString();
-            IsActive = Convert.ToBoolean(row[2]);
+            throw new NotImplementedException("Create method not implemented for User class.");
         }
 
-        public override void Create()
+        public void Update()
         {
-            MessageBox.Show("Unable to create user. Please use the database directly.");
+            throw new NotImplementedException("Update method not implemented for User class.");
         }
 
-        public override void Update()
+        public void Delete()
         {
-            MessageBox.Show("Unable to update user. Please use the database directly.");
+            throw new NotImplementedException("Delete method not implemented for User class.");
         }
 
-        public override void Delete()
-        {
-            MessageBox.Show("Unable to delete user. Please use the database directly.");
-        }
-
-        public override bool IsValid => Name != string.Empty;
+        public bool IsValid => Name != string.Empty;
     }
 }

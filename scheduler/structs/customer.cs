@@ -1,106 +1,88 @@
-using System;
-using System.Collections.Generic;
-using MySql.Data.MySqlClient;
-using scheduler.database;
+using Microsoft.Data.SqlClient;
 
-namespace scheduler.structs
+namespace scheduler
 {
     /// <summary>
     /// Customer object and logic to interact with DB for customer records
     /// </summary>
-    public class Customer : DBObject
+    public class Customer
     {
         // Public Variables
-        public string Name;
+        public int customerId = -1;
+        public string customerName = string.Empty;
         public Address Address = new Address();
-        public bool IsActive;
+        public bool active = true;
+        public DateTime createDate = DateTime.Now;
+        public string createdBy = string.Empty;
+        public DateTime lastUpdate = DateTime.Now;
+        public string lastUpdateBy = string.Empty;
 
-        public Customer()
+
+        public static explicit operator Customer(SqlDataReader reader)
         {
-            Id = -1;
-        }
-
-        public Customer(int id)
-        {
-            Id = id;
-            Load();
-        }
-
-        public override void Load()
-        {
-            Address = new Address();
-            if (Id == -1) throw new Exception("Cannot load customer with no ID");
-
-            try
+            var customer = new Customer();
+            if (reader.Read())
             {
-                var result = DatabaseManager.Instance.ExecuteQuery(
-                    "SELECT customerId, customerName, addressId, active, createDate, createdBy, lastUpdate, LastUpdateBy FROM customer WHERE customerId = @id",
-                    new List<MySqlParameter> { new MySqlParameter("@id", Id) })[0];
-                Id = (int)result[0];
-                Name = (string)result[1];
-                Address.Id = (int)result[2];
-                Address.Load();
-                IsActive = Convert.ToBoolean(result[3]);
-                CreatedAt = DateTime.Parse(result[4].ToString());
-                CreatedBy = result[5].ToString();
-                UpdatedAt = DateTime.Parse(result[6].ToString());
-                UpdatedBy = result[7].ToString();
+                customer.customerId = (int)reader["customerId"]; // customerId INT
+                customer.customerName = (string)reader["customerName"]; // customerName VARCHAR(50)
+                customer.active = (bool)reader["active"]; // active BOOLEAN
+                customer.createDate = (DateTime)reader["createDate"]; // createDate DATETIME
+                customer.createdBy = (string)reader["createdBy"]; // createdBy VARCHAR(50)
+                customer.lastUpdate = (DateTime)reader["lastUpdate"]; // lastUpdate DATETIME
+                customer.lastUpdateBy = (string)reader["lastUpdateBy"]; // lastUpdateBy VARCHAR(50)
+                customer.Address = new Address((int)reader["addressId"]);
             }
-            catch (Exception e)
+
+            return customer;
+        }
+
+        public Customer(int id = -1)
+        {
+            customerId = id;
+            if (customerId == -1) return; // If the customerId is -1, do not load the customer
+            string _connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MySQLConnection"]
+                .ConnectionString;
+            using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                throw new Exception("Cannot load customer with ID: " + Id + "\n" + e.Message);
+                connection.Open();
+                string query = "SELECT * FROM customer WHERE customerId = @id";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", customerId);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            customerName = (string)reader["customerName"]; // customerName VARCHAR(50)
+                            active = (bool)reader["active"]; // active BOOLEAN
+                            createDate = (DateTime)reader["createDate"]; // createDate DATETIME
+                            createdBy = (string)reader["createdBy"]; // createdBy VARCHAR(50)
+                            lastUpdate = (DateTime)reader["lastUpdate"]; // lastUpdate DATETIME
+                            lastUpdateBy = (string)reader["lastUpdateBy"]; // lastUpdateBy VARCHAR(50)
+                            Address = new Address((int)reader["addressId"]);
+                        }
+                    }
+                }
             }
         }
 
-        public override void Create()
+        public void Create()
         {
-            if (!IsValid) throw new Exception("Cannot create customer with invalid data");
-            if (Id != -1) throw new Exception("Cannot create customer with ID");
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string query =
-                "INSERT INTO customer (customerName, addressId, active, createDate, createdBy) VALUES (?, ?, ?, ?, ?)";
-            var parameters = new object[]
-            {
-                Name,
-                Address.Id,
-                IsActive,
-                timestamp,
-                State.Instance.CurrentUser.Name,
-                timestamp,
-                State.Instance.CurrentUser.Name
-            };
-            DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+            throw new NotImplementedException("Create method not implemented for Customer class.");
         }
 
-        public override void Update()
+        public void Update()
         {
-            if (!IsValid) throw new Exception("Cannot update customer with invalid data");
-            if (Id == -1) throw new Exception("Cannot update customer with no ID");
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string query =
-                "UPDATE customer SET customerName = ?, addressId = ?, active = ?, lastUpdate = ?, lastUpdateBy = ? WHERE customerId = ?";
-            var parameters = new object[]
-            {
-                Name,
-                Address.Id,
-                IsActive,
-                timestamp,
-                State.Instance.CurrentUser.Name,
-                Id
-            };
-            DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+            throw new NotImplementedException("Update method not implemented for Customer class.");
         }
 
-        public override void Delete()
+        public void Delete()
         {
-            string query = "DELETE FROM customer WHERE customerId = ?";
-            DatabaseManager.Instance.ExecuteNonQuery(query, new object[] { Id });
+            throw new NotImplementedException("Delete method not implemented for Customer class.");
         }
 
-        public override bool IsValid =>
-            Name != string.Empty &&
+        public bool IsValid =>
+            customerName != string.Empty &&
             Address.IsValid;
     }
 }

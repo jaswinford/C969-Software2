@@ -114,7 +114,6 @@
       <Compile Include="CustomerWindow.xaml.cs">
           <DependentUpon>CustomerWindow.xaml</DependentUpon>
       </Compile>
-      <Compile Include="database\DatabaseManager.cs"/>
       <Compile Include="LanguageManager.cs"/>
       <Compile Include="Properties\Strings.Designer.cs">
           <DesignTime>True</DesignTime>

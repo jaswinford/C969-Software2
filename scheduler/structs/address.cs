@@ -1,177 +1,105 @@
-using System;
-using System.Collections.Generic;
+using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
-using System.Windows;
-using MySql.Data.MySqlClient;
-using scheduler.database;
 
-namespace scheduler.structs
+namespace scheduler
 {
     /// <summary>
     /// Address object and logic to interact with DB for address records
     /// </summary>
-    public class Address : DBObject
+    public class Address
     {
-        // Private Variables
-        private string _address1;
-        private string _address2;
-        private string _phone;
-        private string _postalCode;
-
         // Public Variables
-        public string Address1
+        public int AddressId = -1; // addressId INT
+        public string Address1 = string.Empty;
+        public string Address2 = string.Empty;
+        public City City = new City();
+        public string PostalCode = string.Empty;
+        public string Phone = string.Empty;
+        public DateTime CreateDate = DateTime.Now; // createDate DATETIME
+        public string CreatedBy = string.Empty; // createdBy VARCHAR(50)
+        public DateTime LastUpdate = DateTime.Now; // lastUpdate DATETIME
+        public string LastUpdateBy = string.Empty; // lastUpdateBy VARCHAR(50)
+
+
+        public static explicit operator Address(SqlDataReader reader)
         {
-            get => _address1;
-            set => _address1 = DatabaseManager.SanitizeString(value, 50);
-        } // address VARCHAR(50)
+            var address = new Address();
+            if (reader.Read())
+            {
+                address.AddressId = (int)reader["addressId"]; // addressId INT
+                address.Address1 = (string)reader["address"]; // address VARCHAR(50)
+                address.Address2 = (string)reader["address2"]; // address2 VARCHAR(50)
+                address.City = new City((int)reader["cityId"]);
+                address.PostalCode = (string)reader["postalCode"]; // postalCode VARCHAR(20)
+                address.Phone = (string)reader["phone"]; // phone VARCHAR(20)
+                address.CreateDate = (DateTime)reader["createDate"]; // createDate DATETIME
+                address.CreatedBy = (string)reader["createdBy"]; // createdBy VARCHAR(50)
+                address.LastUpdate = (DateTime)reader["lastUpdate"]; // lastUpdate DATETIME
+                address.LastUpdateBy = (string)reader["lastUpdateBy"]; // lastUpdateBy VARCHAR(50)
+            }
 
-        public string Address2
+            return address;
+        }
+
+        public Address(int id = -1)
         {
-            get => _address2;
-            set => _address2 = DatabaseManager.SanitizeString(value, 50);
-        } // address2 VARCHAR(50)
+            AddressId = id;
+            if (AddressId == -1) return; // If the AddressId is -1, do not load the address
+            string _connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MySQLConnection"]
+                .ConnectionString;
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                string query = "SELECT * FROM address WHERE addressId = @id";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", AddressId);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            Address1 = (string)reader["address"];
+                            Address2 = (string)reader["address2"];
+                            City = new City((int)reader["cityId"]);
+                            PostalCode = (string)reader["postalCode"];
+                            Phone = (string)reader["phone"];
+                            CreateDate = (DateTime)reader["createDate"];
+                            CreatedBy = (string)reader["createdBy"];
+                            LastUpdate = (DateTime)reader["lastUpdate"];
+                            LastUpdateBy = (string)reader["lastUpdateBy"];
+                        }
+                    }
+                }
+            }
+        }
 
-        public City City { get; set; } // cityId INT(10)
 
-        public string PostalCode
-        {
-            get => _postalCode;
-            set => _postalCode = DatabaseManager.SanitizeString(value, 10);
-        } // postalCode VARCHAR(10)
-
-        public string Phone
-        {
-            get => _phone;
-            set => _phone = DatabaseManager.SanitizeString(value, 20);
-        } // phone VARCHAR(20)
-
-        /// <summary>
-        ///     Determines whether the current address instance satisfies defined validation rules.
-        /// </summary>
-        /// <remarks>
-        ///     A.2.a - Validation is based on the following criteria:
-        ///     - The `Address1`, `City.Name`, `PostalCode`, and `Phone` fields must be non-empty.
-        ///     - The `Phone` field must match a valid pattern that permits only digits and dashes.
-        /// </remarks>
-        /// <returns>
-        ///     Returns true if the address is valid according to the specified conditions; otherwise, false.
-        /// </returns>
-        public override bool IsValid
+        public bool IsValid
         {
             get
             {
-                if (_address1 == string.Empty || City.Name == string.Empty || _postalCode == string.Empty ||
-                    _phone == string.Empty) return false; //verify address is provided
-                if (!Regex.IsMatch(_phone, @"^[0-9-]+$")) return false;
+                if (Address1 == string.Empty || City.Name == string.Empty || PostalCode == string.Empty ||
+                    Phone == string.Empty) return false; //verify address is provided
+                if (!Regex.IsMatch(Phone, @"^[0-9-]+$")) return false;
                 return true;
             }
         }
 
         // Functions
 
-        public override void Load()
+        public void Create()
         {
-            var result =
-                DatabaseManager.Instance.ExecuteQuery(
-                    "SELECT addressId, address, address2, cityId, postalCode, phone, createDate, createdBy, lastUpdate, lastUpdateBy FROM address WHERE addressId = @id",
-                    new List<MySqlParameter> { new MySqlParameter("@id", Id) });
-            if (result.Count == 0) return; //Don't load if doesn't exist'
-            var row = result[0];
-            Id = Convert.ToInt32(row[0]);
-            Address1 = row[1].ToString();
-            Address2 = row[2].ToString();
-            City.Id = Convert.ToInt32(row[3]);
-            PostalCode = row[4].ToString();
-            Phone = row[5].ToString();
-            CreatedAt = DateTime.Parse(row[6].ToString());
-            CreatedBy = row[7].ToString();
-            UpdatedAt = DateTime.Parse(row[8].ToString());
-            UpdatedBy = row[9].ToString();
+            throw new NotImplementedException(); //Create method not implemented for Address class
         }
 
-        public override void Create()
+        public void Update()
         {
-            if (Id != -1)
-            {
-                Update();
-                return;
-            } //If it already exists, Update it.
-
-            if (!IsValid) return; //Don't create if invalid'
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-            var query =
-                "INSERT INTO address (address, address2, cityId, postalCode, phone, createDate, createdBy,lastUpdate, lastUpdateBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            var parameters = new object[]
-            {
-                DatabaseManager.SanitizeString(Address1),
-                DatabaseManager.SanitizeString(Address2),
-                City.Id,
-                PostalCode,
-                DatabaseManager.SanitizeString(Phone),
-                timestamp,
-                DatabaseManager.SanitizeString(State.Instance.CurrentUser.Name),
-                timestamp,
-                DatabaseManager.SanitizeString(State.Instance.CurrentUser.Name)
-            };
-            try
-            {
-                DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
+            throw new NotImplementedException(); //Update method not implemented for Address class
         }
 
-        public override void Update()
+        public void Delete()
         {
-            if (Id == -1)
-            {
-                Create(); //If it doesn't exist, create it.
-                return;
-            }
-
-            if (!IsValid) return; //Don't update if invalid'
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            var query =
-                "UPDATE address SET address = ?, address2 = ?, cityId = ?, postalCode = ?, phone = ? , lastUpdate = ? , lastUpdateBy = ? WHERE addressId = ?";
-            var parameters = new object[]
-            {
-                Address1,
-                Address2,
-                City.Id,
-                PostalCode,
-                Phone,
-                Id,
-                timestamp,
-                State.Instance.CurrentUser.Name
-            };
-            try
-            {
-                DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
-        }
-
-        public override void Delete()
-        {
-            if (Id == -1) return; //Don't delete if doesn't exist'
-            var query = "DELETE FROM address WHERE addressId = ?";
-            var parameters = new object[] { Id };
-            try
-            {
-                DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
+            throw new NotImplementedException(); //Delete method not implemented for Address class
         }
 
         public override string ToString()
@@ -183,11 +111,6 @@ namespace scheduler.structs
             if (PostalCode != string.Empty) output += PostalCode + "\n";
             if (Phone != string.Empty) output += Phone;
             return output;
-        }
-
-        public Address()
-        {
-            City = new City();
         }
     }
 }

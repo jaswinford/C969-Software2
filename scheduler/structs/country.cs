@@ -1,75 +1,76 @@
-using System;
-using System.Collections.Generic;
-using System.Windows.Documents;
-using MySql.Data.MySqlClient;
-using scheduler.database;
+using Microsoft.Data.SqlClient;
 
-namespace scheduler.structs
+namespace scheduler
 {
-    /// <summary>
-    /// Country object and logic to interact with DB for country records
-    /// </summary>
-    public class Country : DBObject
+    public class Country
     {
-        public string Name { get; set; } = string.Empty; // country VARCHAR(50)
+        public int countryId = -1; // countryId INT
+        public string Name = string.Empty; // country VARCHAR(50)
+        public DateTime CreatedAt = DateTime.Now; // createDate DATETIME
+        public string CreatedBy = string.Empty; // createdBy VARCHAR(50)
+        public DateTime UpdatedAt = DateTime.Now; // lastUpdate DATETIME
+        public string UpdatedBy = string.Empty; // lastUpdateBy VARCHAR(50)
 
-        public override void Load()
+
+        public static explicit operator Country(SqlDataReader reader)
         {
-            if (Id == -1) throw new System.Exception("Cannot load country with no ID");
-
-            var result = DatabaseManager.Instance.ExecuteQuery(
-                "SELECT countryId, country, createDate,createdBy,lastUpdate,lastUpdateBy FROM country WHERE countryId = @id",
-                new List<MySqlParameter> { new MySqlParameter("@id", Id) })[0];
-            Id = Convert.ToInt32(result[0]);
-            Name = result[1].ToString();
-            CreatedAt = DateTime.Parse(result[2].ToString());
-            CreatedBy = result[3].ToString();
-            UpdatedAt = DateTime.Parse(result[4].ToString());
-            UpdatedBy = result[5].ToString();
-        }
-
-        public override void Create()
-        {
-            if (Id != -1) throw new System.Exception("Cannot create country with ID");
-            if (!IsValid) throw new System.Exception("Cannot create country with invalid data");
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string query =
-                "INSERT INTO country (country, createDate, createdBy, lastUpdate, lastUpdateBy) VALUES (?, ?, ?, ?, ?)";
-            var parameters = new object[]
+            var country = new Country();
+            if (reader.Read())
             {
-                Name,
-                timestamp,
-                State.Instance.CurrentUser.Name,
-                timestamp,
-                State.Instance.CurrentUser.Name
-            };
-            DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+                country.countryId = (int)reader["countryId"]; // countryId INT
+                country.Name = (string)reader["country"]; // country VARCHAR(50)
+                country.CreatedAt = (DateTime)reader["createDate"]; // createDate DATETIME
+                country.CreatedBy = (string)reader["createdBy"]; // createdBy VARCHAR(50)
+                country.UpdatedAt = (DateTime)reader["lastUpdate"]; // lastUpdate DATETIME
+                country.UpdatedBy = (string)reader["lastUpdateBy"]; // lastUpdateBy VARCHAR(50)
+            }
+
+            return country;
         }
 
-        public override void Update()
+        public Country(int id = -1)
         {
-            if (Id == -1) throw new Exception("Cannot update country with no ID");
-            if (!IsValid) throw new Exception("Cannot update country with invalid data");
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string query = "UPDATE country SET country = ?, lastUpdate = ?, lastUpdateBy = ? WHERE countryId = ?";
-            var parameters = new object[]
+            countryId = id;
+            if (countryId == -1) return; // If the countryId is -1, do not load the country
+            string _connectionString = System.Configuration.ConfigurationManager.ConnectionStrings["MySQLConnection"]
+                .ConnectionString;
+            using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                Name,
-                timestamp,
-                State.Instance.CurrentUser.Name,
-                Id
-            };
-            DatabaseManager.Instance.ExecuteNonQuery(query, parameters);
+                connection.Open();
+                string query = "SELECT * FROM country WHERE countryId = @id";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", countryId);
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            Name = (string)reader["country"]; // country VARCHAR(50)
+                            CreatedAt = (DateTime)reader["createDate"]; // createDate DATETIME
+                            CreatedBy = (string)reader["createdBy"]; // createdBy VARCHAR(50)
+                            UpdatedAt = (DateTime)reader["lastUpdate"]; // lastUpdate DATETIME
+                            UpdatedBy = (string)reader["lastUpdateBy"]; // lastUpdateBy VARCHAR(50)
+                        }
+                    }
+                }
+            }
         }
 
-        public override void Delete()
+        public void Create()
         {
-            string query = "DELETE FROM country WHERE countryId = ?";
-            DatabaseManager.Instance.ExecuteNonQuery(query, new object[] { Id });
+            throw new NotImplementedException(); // Create method not implemented for Country class
         }
 
-        public override bool IsValid { get; }
+        public void Update()
+        {
+            throw new NotImplementedException(); // Update method not implemented for Country class
+        }
+
+        public void Delete()
+        {
+            throw new NotImplementedException(); // Delete method not implemented for Country class
+        }
+
+        public bool IsValid => !string.IsNullOrEmpty(Name); // Check if the country name is not empty
     }
 }
